@@ -1,12 +1,12 @@
 # Teams monitor
 
-[![Check my blog][badge_source]][link_source] [![Check my blog][badge_issues]][link_issues] [![Check my blog][badge_blog]][link_blog]
+[![Check my blog][badge_source]][link_source] [![Check my blog][badge_issues]][link_issues] [![GitHub Sponsors][badge_sponsor]][link_sponsor] [![Check my blog][badge_blog]][link_blog]
 
 A simple command line application that connects to the local Teams API and forwards the meeting status to any endpoint (you manage).
 
 Sending the status from your Teams client to any website is a matter of three steps:
 
-1. Install the tool `dotnet install SvRooij.TeamsMonitor`
+1. Install the tool `dotnet tool install --global SvRooij.TeamsMonitor`
 2. (optional) Set the Team token in environment `TEAMS_TOKEN`
 3. Run the tool `teams-monitor {teams-token-here} --webhook {url-here}`
 
@@ -138,8 +138,10 @@ If you like my Teams Monitor, please give me a shout out on any of these platfor
 
 [badge_issues]: https://img.shields.io/github/issues/svrooij/teams-monitor?style=for-the-badge&logo=github
 [badge_source]: https://img.shields.io/badge/source-svrooij%2Fteams--monitor-blue?style=for-the-badge&logo=github
+[badge_sponsor]: https://img.shields.io/github/sponsors/svrooij?label=Github%20Sponsors&style=for-the-badge&logo=github
 [link_issues]: https://github.com/svrooij/teams-monitor/issues
 [link_source]: https://github.com/svrooij/teams-monitor
+[link_sponsor]: https://github.com/sponsors/svrooij/
 
 [badge_blog]: https://img.shields.io/badge/blog-svrooij.io-blue?style=for-the-badge
 [badge_linkedin]: https://img.shields.io/badge/LinkedIn-stephanvanrooij-blue?style=for-the-badge&logo=linkedin
