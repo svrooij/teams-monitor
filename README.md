@@ -1,6 +1,12 @@
 # Teams monitor
 
-[![Check my blog][badge_source]][link_source] [![Check my blog][badge_issues]][link_issues] [![GitHub Sponsors][badge_sponsor]][link_sponsor] [![Check my blog][badge_blog]][link_blog]
+ [![Nuget badge][badge_nuget]][link_nuget]
+ [![Number of github stars][badge_stars]][link_source]
+ [![Number of github issues][badge_issues]][link_issues]
+ [![Source on github][badge_source]][link_source]
+ 
+ [![GitHub Sponsors][badge_sponsor]][link_sponsor]
+ [![Check my blog][badge_blog]][link_blog]
 
 A simple command line application that connects to the local Teams API and forwards the meeting status to any endpoint (you manage).
 
@@ -10,9 +16,11 @@ Sending the status from your Teams client to any website is a matter of three st
 2. (optional) Set the Team token in environment `TEAMS_TOKEN`
 3. Run the tool `teams-monitor {teams-token-here} --webhook {url-here}`
 
+This app needs either `.NET6` or `.NET7` installed on your machine.
+
 ## What does Teams Monitor do?
 
-It [connects](#teams-has-a-local-api) to Teams and allows you to send the realtime data from your Teams client to any server.
+It [connects](#teams-has-a-local-api) to Teams and allows you to send the realtime data from your Teams client to any server (flowchart only displays at github).
 
 ```mermaid
 flowchart LR
@@ -133,13 +141,17 @@ If something changes to your meeting status (or any of the other values), you'll
 [![Link Mastodon][badge_mastodon]][link_mastodon]
 [![Follow on Twitter][badge_twitter]][link_twitter]
 [![Check my blog][badge_blog]][link_blog]
+[![Number of github stars][badge_stars]][link_source]
 
 If you like my Teams Monitor, please give me a shout out on any of these platforms.
 
 [badge_issues]: https://img.shields.io/github/issues/svrooij/teams-monitor?style=for-the-badge&logo=github
+[badge_nuget]: https://img.shields.io/nuget/v/SvRooij.TeamsMonitor?logo=nuget&style=for-the-badge
 [badge_source]: https://img.shields.io/badge/source-svrooij%2Fteams--monitor-blue?style=for-the-badge&logo=github
 [badge_sponsor]: https://img.shields.io/github/sponsors/svrooij?label=Github%20Sponsors&style=for-the-badge&logo=github
+[badge_stars]: https://img.shields.io/github/stars/svrooij/teams-monitor?style=for-the-badge&logo=github
 [link_issues]: https://github.com/svrooij/teams-monitor/issues
+[link_nuget]: https://www.nuget.org/packages/svrooij.teamsmonitor
 [link_source]: https://github.com/svrooij/teams-monitor
 [link_sponsor]: https://github.com/sponsors/svrooij/
 
