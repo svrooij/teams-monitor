@@ -19,18 +19,22 @@ public sealed class MonitorCommand : RootCommand {
     }
 
     private async Task Run(MonitorCommandOptions options, CancellationToken cancellationToken) {
-        this._options = options;
+        try {
+            this._options = options;
 
-        Console.WriteLine("Connecting to Microsoft Teams");
-        // Thanks to Martijn Smit https://lostdomain.notion.site/Microsoft-Teams-WebSocket-API-5c042838bc3e4731bdfe679e864ab52a
-        var wsUrl = new Uri($"ws://localhost:8124?token={options.TeamsToken}&protocol-version=1.0.0&manufacturer=MuteDeck&device=MuteDeck&app=MuteDeck&app-version=1.4");
-        using var socket = new ClientWebSocket();
-        await socket.ConnectAsync(wsUrl, cancellationToken);
-        Console.WriteLine("Started listening...          CTRL+C to exit");
-        
-        var parser = new SocketParser();
-        parser.OnUpdate += HandleUpdate;
-        await parser.StartReceivingAsync(socket, cancellationToken);
+            Console.WriteLine("Connecting to Microsoft Teams");
+            // Thanks to Martijn Smit https://lostdomain.notion.site/Microsoft-Teams-WebSocket-API-5c042838bc3e4731bdfe679e864ab52a
+            var wsUrl = new Uri($"ws://localhost:8124?token={options.TeamsToken}&protocol-version=1.0.0&manufacturer=MuteDeck&device=MuteDeck&app=MuteDeck&app-version=1.4");
+            using var socket = new ClientWebSocket();
+            await socket.ConnectAsync(wsUrl, cancellationToken);
+            Console.WriteLine("Started listening...          CTRL+C to exit");
+            
+            var parser = new SocketParser();
+            parser.OnUpdate += HandleUpdate;
+            await parser.StartReceivingAsync(socket, cancellationToken);
+        } catch (Exception e){
+            Console.WriteLine("Error starting monitor", e.Message);
+        }
     }
 
     private async void HandleUpdate(object? o, TeamsMeetingUpdate? update) {
