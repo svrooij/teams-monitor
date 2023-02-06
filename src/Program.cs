@@ -1,4 +1,6 @@
 ﻿using System.CommandLine;
+using System.Reflection;
+
 WriteHeader();
 var rootCommand = new MonitorCommand();
 // The minimal template has no access to 'args'
@@ -28,8 +30,8 @@ const string header = @",---------.    .-''-.     ____    ,---.    ,---.   .-'''
 void WriteHeader() {
     Console.WriteLine(header);
     Console.WriteLine();
-    Console.WriteLine("by @svrooij");
-    Console.WriteLine("Source: https://github.com/svrooij/teams-monitor");
+    Console.WriteLine("Teams monitor v{0} by @svrooij", System.Reflection.Assembly.GetEntryAssembly()?.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion);
+    Console.WriteLine("Docs and Source: https://github.com/svrooij/teams-monitor");
     Console.WriteLine();
 
 }

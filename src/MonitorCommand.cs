@@ -1,4 +1,5 @@
 using System.CommandLine;
+using System.CommandLine.Invocation;
 using System.CommandLine.NamingConventionBinder;
 using System.Net.WebSockets;
 using System.Text;
@@ -8,17 +9,17 @@ public sealed class MonitorCommand : RootCommand {
     private readonly HttpClient httpClient;
     private MonitorCommandOptions? _options;
     public MonitorCommand() : base("Monitor your Teams status") {
-        this.AddArgument(new Argument<string>("teams-token",() => Environment.GetEnvironmentVariable("TEAMS_TOKEN") ?? string.Empty, "Teams local API Token, see: https://support.microsoft.com/en-us/office/connect-third-party-devices-to-teams-aabca9f2-47bb-407f-9f9b-81a104a883d6"));
+        this.AddArgument(new Argument<string?>("teams-token",() => Environment.GetEnvironmentVariable("TEAMS_TOKEN") ?? null, "Teams local API Token, see: https://support.microsoft.com/en-us/office/connect-third-party-devices-to-teams-aabca9f2-47bb-407f-9f9b-81a104a883d6"));
         // this.AddOption(new Option<string>("--teams-token", "Teams local API token."));
         this.AddOption(new Option<Uri?>("--webhook",() => {
             var webhook = Environment.GetEnvironmentVariable("TEAMS_WEBHOOK");
             return !string.IsNullOrEmpty(webhook) && Uri.TryCreate(webhook, UriKind.Absolute, out var result) ? result : null;
         }, "Webhook URL to post the new status"));
         httpClient = new HttpClient();
-        Handler = CommandHandler.Create<MonitorCommandOptions, CancellationToken>(Run);
+        Handler = CommandHandler.Create<InvocationContext, MonitorCommandOptions, CancellationToken>(Run);
     }
 
-    private async Task Run(MonitorCommandOptions options, CancellationToken cancellationToken) {
+    private async Task Run(InvocationContext context, MonitorCommandOptions options, CancellationToken cancellationToken) {
         try {
             this._options = options;
 
@@ -34,6 +35,7 @@ public sealed class MonitorCommand : RootCommand {
             await parser.StartReceivingAsync(socket, cancellationToken);
         } catch (Exception e){
             Console.WriteLine("Error starting monitor", e.Message);
+            context.ExitCode = 100;
         }
     }
 
