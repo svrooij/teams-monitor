@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "TeamsMonitor": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "TEAMS_TOKEN": "9629221c-74a0-4aa4-ad07-7744498a1f9e"
+      }
+    }
+  }
+}

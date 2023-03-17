@@ -1,0 +1,56 @@
+name: Release TeamsMonitor.Core library
+
+on:
+  workflow_dispatch:
+  # push:
+  #   branches:
+  #   - main
+  #   paths:
+  #     - .github/workflows/release-library.yml
+  #     - src/TeamsMonitor.Core/**/*.cs
+  #     - src/TeamsMonitor.Core/*.csproj
+    
+jobs:
+  build-and-push:
+
+    env:
+      BUILD_CONFIG: 'Release'
+      SOLUTION: 'TeamsMonitor.sln'
+      PROJECT: 'src/TeamsMonitor.Core/TeamsMonitor.Core.csproj'
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: Install GitVersion
+      uses: gittools/actions/gitversion/setup@v0.9.7
+      with:
+        versionSpec: '5.x'
+    
+    - name: Determine Version
+      uses: gittools/actions/gitversion/execute@v0.9.7
+      with:
+        useConfigFile: true
+        configFilePath: GitVersion.yml
+        additionalArguments: /updateprojectfiles
+
+    - uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: | 
+          6.x
+          7.x
+
+    - name: Restore dependencies
+      run: dotnet restore $SOLUTION
+
+    - name: Build solution
+      run: dotnet build $SOLUTION --configuration $BUILD_CONFIG --no-restore
+    
+    - name: Create nuget package
+      run: dotnet pack $PROJECT -c $BUILD_CONFIG --no-build --no-restore --output .
+
+    - name: Push Teams Monitor to nuget
+      run: dotnet nuget push *.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{secrets.NUGET_API_KEY}} --skip-duplicate

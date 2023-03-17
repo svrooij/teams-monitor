@@ -3,19 +3,14 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TeamsMonitor", "src\TeamsMonitor.Tool\TeamsMonitor.csproj", "{0E5C6794-6A4C-4A6C-87D3-6913525DA93C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TeamsMonitor", "src\TeamsMonitor.Tool\TeamsMonitor.csproj", "{0E5C6794-6A4C-4A6C-87D3-6913525DA93C}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{19316D99-8BFB-4A19-A3C4-32C6B4AE6402}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TeamsMonitor.Core", "src\TeamsMonitor.Core\TeamsMonitor.Core.csproj", "{805BAF38-4645-43B4-86A6-79E7A9BE3BC9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TeamsMonitor.Core", "src\TeamsMonitor.Core\TeamsMonitor.Core.csproj", "{805BAF38-4645-43B4-86A6-79E7A9BE3BC9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
-	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{0E5C6794-6A4C-4A6C-87D3-6913525DA93C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -27,7 +22,10 @@ Global
 		{805BAF38-4645-43B4-86A6-79E7A9BE3BC9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{805BAF38-4645-43B4-86A6-79E7A9BE3BC9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
-		{805BAF38-4645-43B4-86A6-79E7A9BE3BC9} = {19316D99-8BFB-4A19-A3C4-32C6B4AE6402}
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {05B4AAFB-6763-49C3-90A3-6CE4515E889A}
 	EndGlobalSection
 EndGlobal

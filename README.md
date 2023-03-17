@@ -18,6 +18,10 @@ Sending the status from your Teams client to any website is a matter of three st
 
 This app needs either `.NET6` or `.NET7` installed on your machine.
 
+## Library available
+
+There also is a [library](https://github.com/svrooij/teams-monitor/blob/main/LIBRARY.md) available, if you want to use this in your own application.
+
 ## What does Teams Monitor do?
 
 It [connects](#teams-has-a-local-api) to Teams and allows you to send the realtime data from your Teams client to any server (flowchart only displays at github).

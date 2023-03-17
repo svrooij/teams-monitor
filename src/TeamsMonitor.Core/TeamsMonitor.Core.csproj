@@ -1,9 +1,23 @@
-<Project Sdk="Microsoft.NET.Sdk">
-
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>net6.0;net7.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
+    <Authors>Stephan van Rooij</Authors>
+    <Copyright>2023</Copyright>
+    <Description>Connect to your local Teams Client to get realtime events from Teams</Description>
+    <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+    <PackageId>SvRooij.TeamsMonitor.Core</PackageId>
+    <PackageProjectUrl>https://github.com/svrooij/teams-monitor</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>Microsoft Teams</PackageTags>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/svrooij/teams-monitor.git</RepositoryUrl>
+    <IsPackable>true</IsPackable>
   </PropertyGroup>
-
+  <ItemGroup>
+    <None Include="..\..\LIBRARY.md" Pack="true" PackagePath="\README.md" />
+    <None Include="..\..\LICENSE.txt" Pack="true" PackagePath="\LICENSE.txt" />
+  </ItemGroup>
 </Project>

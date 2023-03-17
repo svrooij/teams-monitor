@@ -1,9 +1,10 @@
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.CommandLine.NamingConventionBinder;
-using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
+using TeamsMonitor.Core;
+using TeamsMonitor.Core.Models;
 
 public sealed class MonitorCommand : RootCommand {
     private readonly HttpClient httpClient;
@@ -24,27 +25,28 @@ public sealed class MonitorCommand : RootCommand {
             this._options = options;
 
             Console.WriteLine("Connecting to Microsoft Teams");
-            // Thanks to Martijn Smit https://lostdomain.notion.site/Microsoft-Teams-WebSocket-API-5c042838bc3e4731bdfe679e864ab52a
-            var wsUrl = new Uri($"ws://localhost:8124?token={options.TeamsToken}&protocol-version=1.0.0&manufacturer=MuteDeck&device=MuteDeck&app=MuteDeck&app-version=1.4");
-            using var socket = new ClientWebSocket();
-            await socket.ConnectAsync(wsUrl, cancellationToken);
-            Console.WriteLine("Started listening...          CTRL+C to exit");
             
-            var parser = new SocketParser();
-            parser.OnUpdate += HandleUpdate;
-            await parser.StartReceivingAsync(socket, cancellationToken);
+            var socket = new TeamsSocket(new TeamsSocketOptions(options.TeamsToken));
+            socket.Update += HandleUpdate;
+            await socket.ConnectAsync(false, cancellationToken);
+            Console.WriteLine("Started listening...          CTRL+C to exit");
+            while(true)
+            {
+                Console.ReadLine();
+            }
+
         } catch (Exception e){
-            Console.WriteLine("Error starting monitor", e.Message);
+            Console.WriteLine("Error starting monitor {0}", e.Message);
             context.ExitCode = 100;
         }
     }
 
-    private async void HandleUpdate(object? o, TeamsMeetingUpdate? update) {
+    private async void HandleUpdate(object? o, MeetingUpdate? update) {
         Console.WriteLine("Update [IsInMeeting]: {0}", update?.MeetingState?.IsInMeeting);
         try {
             if (_options?.Webhook != null) {
                 Console.WriteLine("--> Sending update to webhook");
-                await httpClient.PostAsync(_options.Webhook, new StringContent(JsonSerializer.Serialize(update, SocketParser.SerializerOptions), Encoding.UTF8, "application/json"));
+                await httpClient.PostAsync(_options.Webhook, new StringContent(JsonSerializer.Serialize(update, TeamsSocket.SerializerOptions), Encoding.UTF8, "application/json"));
             }
         } catch (Exception e) {
             Console.WriteLine("    Error posting to webhook url, {0}", e.Message);
