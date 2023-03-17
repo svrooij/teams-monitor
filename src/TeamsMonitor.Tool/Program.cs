@@ -30,7 +30,7 @@ const string header = @",---------.    .-''-.     ____    ,---.    ,---.   .-'''
 void WriteHeader() {
     Console.WriteLine(header);
     Console.WriteLine();
-    Console.WriteLine("Teams monitor v{0} by @svrooij", System.Reflection.Assembly.GetEntryAssembly()?.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion);
+    Console.WriteLine("Teams monitor v{0} by @svrooij", System.Reflection.Assembly.GetEntryAssembly()?.GetName()?.Version);
     Console.WriteLine("Docs and Source: https://github.com/svrooij/teams-monitor");
     Console.WriteLine();
 

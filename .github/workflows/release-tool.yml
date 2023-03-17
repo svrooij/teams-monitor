@@ -7,8 +7,8 @@ on:
     - main
     paths:
       - .github/workflows/release-tool.yml
-      - src/**/*.cs
-      - src/*.csproj
+      - src/TeamsMonitor.Tool/*.cs
+      - src/TeamsMonitor.Tool/*.csproj
     
 jobs:
   build-and-push:
@@ -16,7 +16,7 @@ jobs:
     env:
       BUILD_CONFIG: 'Release'
       SOLUTION: 'TeamsMonitor.sln'
-      PROJECT: 'src/TeamsMonitor.csproj'
+      PROJECT: 'src/TeamsMonitor.Tool/TeamsMonitor.csproj'
 
     runs-on: ubuntu-latest
 
