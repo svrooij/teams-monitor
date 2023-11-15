@@ -15,6 +15,8 @@ namespace TeamsMonitor.Core
         public static readonly JsonSerializerOptions SerializerOptions = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
         private readonly TeamsSocketOptions options;
         private readonly ClientWebSocket webSocket;
+        private int nextRequestId = 0;
+        private bool shouldPair;
         private Task? backgroundTask;
         private bool disposedValue;
 
@@ -25,6 +27,7 @@ namespace TeamsMonitor.Core
         public TeamsSocket(TeamsSocketOptions options)
         {
             this.options = options;
+            this.shouldPair = options.AutoPair;
             webSocket = new ClientWebSocket();
         }
 
@@ -34,30 +37,51 @@ namespace TeamsMonitor.Core
         public event EventHandler<MeetingUpdate>? Update;
 
         /// <summary>
+        /// When pairing with Teams, you get a new token to use for the next connection. This event will fire when that happens
+        /// </summary>
+        public event EventHandler<string>? NewToken;
+
+        /// <summary>
+        /// When calling a service, you get a response. This event will fire when that happens
+        /// </summary>
+        public event EventHandler<ServiceResponse>? ServiceResponse;
+
+        /// <summary>
         /// Give your applause
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public Task ApplaudAsync(CancellationToken cancellationToken) => CallServiceAsync("call", "react-applause", cancellationToken);
+        public Task<int> ApplaudAsync(CancellationToken cancellationToken) => SendReaction("applause", cancellationToken);
 
         /// <summary>
         /// Call any service in Teams
         /// </summary>
-        /// <param name="service">Service name</param>
         /// <param name="action">Action name</param>
-        /// <param name="cancellationToken"></param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <param name="parameters">Optional parameters</param>
         /// <remarks>Please let me know if you found services or actions not already defined. https://github.com/svrooij/teams-monitor</remarks>
-        public async Task CallServiceAsync(string service, string action, CancellationToken cancellationToken)
+        public async Task<int> CallServiceAsync(string action, CancellationToken cancellationToken, object? parameters = default)
         {
-            var message = new ServiceRequest(service, action);
+            nextRequestId++;
+            var message = new ServiceRequest(action, nextRequestId, parameters);
             using var stream = new MemoryStream();
-            await JsonSerializer.SerializeAsync<ServiceRequest>(stream, message, SerializerOptions, cancellationToken);
+            await JsonSerializer.SerializeAsync(stream, message, SerializerOptions, cancellationToken);
             stream.Seek(0, SeekOrigin.Begin);
             if (stream.TryGetBuffer(out var buffer))
             {
                 await webSocket.SendAsync(buffer, WebSocketMessageType.Text, true, cancellationToken);
             }
+
+            return nextRequestId;
         }
+
+        /// <summary>
+        /// Send any reaction to Teams
+        /// </summary>
+        /// <param name="reaction">Any available reaction `like`, `love`, `applause`, `wow`, `laugh`</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns></returns>
+        public async Task<int> SendReaction(string reaction, CancellationToken cancellationToken) => await CallServiceAsync("send-reaction", cancellationToken, new { @Type = reaction });
 
         /// <summary>
         /// Connect to Teams Client
@@ -89,63 +113,63 @@ namespace TeamsMonitor.Core
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public Task LaughAsync(CancellationToken cancellationToken) => CallServiceAsync("call", "react-laugh", cancellationToken);
+        public Task<int> LaughAsync(CancellationToken cancellationToken) => SendReaction("laugh", cancellationToken);
 
         /// <summary>
         /// Leave the current call
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public Task LeaveCallAsync(CancellationToken cancellationToken) => CallServiceAsync("call", "leave-call", cancellationToken);
+        public Task<int> LeaveCallAsync(CancellationToken cancellationToken) => CallServiceAsync("leave-call", cancellationToken);
 
         /// <summary>
         /// Love reaction
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public Task LoveAsync(CancellationToken cancellationToken) => CallServiceAsync("call", "react-love", cancellationToken);
+        public Task<int> LoveAsync(CancellationToken cancellationToken) => SendReaction("love", cancellationToken);
 
         /// <summary>
         /// Like reaction
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public Task ThumbsUpAsync(CancellationToken cancellationToken) => CallServiceAsync("call", "react-like", cancellationToken);
+        public Task<int> ThumbsUpAsync(CancellationToken cancellationToken) => SendReaction("like", cancellationToken);
 
         /// <summary>
         /// Toggle background blur
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public Task ToggleBackgroundBlurAsync(CancellationToken cancellationToken) => CallServiceAsync("background-blur", "toggle-background-blur", cancellationToken);
+        public Task<int> ToggleBackgroundBlurAsync(CancellationToken cancellationToken) => CallServiceAsync("toggle-background-blur", cancellationToken);
 
         /// <summary>
         /// Toggle mute
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public Task ToggleMuteAsync(CancellationToken cancellationToken) => CallServiceAsync("toggle-mute", "toggle-mute", cancellationToken);
+        public Task<int> ToggleMuteAsync(CancellationToken cancellationToken) => CallServiceAsync("toggle-mute", cancellationToken);
 
         /// <summary>
         /// Toggle Raise hand
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public Task ToggleRaiseHandAsync(CancellationToken cancellationToken) => CallServiceAsync("raise-hand", "toggle-hand", cancellationToken);
+        public Task<int> ToggleRaiseHandAsync(CancellationToken cancellationToken) => CallServiceAsync("toggle-hand", cancellationToken);
 
         /// <summary>
         /// Toggle recording
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public Task ToggleRecordingAsync(CancellationToken cancellationToken) => CallServiceAsync("recording", "toggle-recording", cancellationToken);
+        public Task<int> ToggleRecordingAsync(CancellationToken cancellationToken) => CallServiceAsync("toggle-recording", cancellationToken);
 
         /// <summary>
         /// Toggle Video
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public Task ToggleVideoAsync(CancellationToken cancellationToken) => CallServiceAsync("toggle-video", "toggle-video", cancellationToken);
+        public Task<int> ToggleVideoAsync(CancellationToken cancellationToken) => CallServiceAsync("toggle-video", cancellationToken);
 
         /// <summary>
         /// 
@@ -165,15 +189,33 @@ namespace TeamsMonitor.Core
         }
 
         /// <summary>
-        /// Emit event
+        /// Emit MeetingUpdate
         /// </summary>
-        /// <param name="e"></param>
+        /// <param name="e">The data got from Teams</param>
         protected virtual void OnUpdate(MeetingUpdate? e)
         {
-            //Raise the Tick event (see below for an explanation of this)
-            var updateEvent = Update;
-            if (updateEvent != null && e is not null)
-                updateEvent(this, e);
+            if (Update != null && e is not null)
+                Update(this, e);
+
+            
+        }
+
+        /// <summary>
+        /// Emit NewToken event
+        /// </summary>
+        protected virtual void OnNewToken(string? e)
+        {
+            if (NewToken != null && e is not null)
+                NewToken(this, e);
+        }
+
+        /// <summary>
+        /// Emit ServiceResponse event
+        /// </summary>
+        protected virtual void OnServiceResponse(ServiceResponse? e)
+        {
+            if (ServiceResponse != null && e is not null)
+                ServiceResponse(this, e);
         }
 
         private async Task ReadUntilCancelled(CancellationToken cancellationToken)
@@ -193,7 +235,27 @@ namespace TeamsMonitor.Core
 
                     ms.Seek(0, SeekOrigin.Begin);
                     var message = await JsonSerializer.DeserializeAsync<TeamsMessage>(ms, SerializerOptions, cancellationToken: cancellationToken);
-                    OnUpdate(message?.MeetingUpdate);
+                    if (message?.MeetingUpdate is not null) {
+                        OnUpdate(message?.MeetingUpdate);
+                        if (message!.MeetingUpdate.MeetingPermissions?.CanPair is true && this.shouldPair) {
+                            await Task.Delay(1000, cancellationToken); // Wait a bit before pairing
+                            if (shouldPair) {
+                                //await CallServiceAsync(options.AutoPairAction, cancellationToken);
+                                await SendReaction("like", cancellationToken);
+                            }
+                            
+                        }
+                    }
+
+                    if(message?.TokenRefresh is not null) {
+                        OnNewToken(message?.TokenRefresh);
+                        shouldPair = false;
+                    }
+                    
+                    if(message?.RequestId is not null && message?.Response is not null) {
+                        OnServiceResponse(new ServiceResponse { RequestId = message.RequestId.Value, Response = message.Response });
+                    }
+                    
                 }
             }
             catch

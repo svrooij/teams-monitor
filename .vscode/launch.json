@@ -10,7 +10,7 @@
             "request": "launch",
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/src/bin/Debug/net6.0/TeamsMonitor.dll",
+            "program": "${workspaceFolder}/src/TeamsMonitor.Tool/bin/Debug/net8.0/TeamsMonitor.dll",
             "args": [ // ADD the Teams API here
             ],
             "cwd": "${workspaceFolder}",

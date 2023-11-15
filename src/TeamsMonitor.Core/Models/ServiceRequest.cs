@@ -8,24 +8,15 @@
         /// <summary>
         /// Create new ServiceRequest
         /// </summary>
-        /// <param name="service">Service to call</param>
         /// <param name="action">Action to call</param>
-        public ServiceRequest(string service, string action)
+        /// <param name="requestId">Request ID</param>
+        /// <param name="additionalData">Data to be send as Parameters</param>
+        public ServiceRequest(string action, int requestId = 0, object? additionalData = null)
         {
-            Service = service;
             Action = action;
-            Timestamp = DateTimeOffset.Now.ToUnixTimeSeconds() * 1000;
+            RequestId = requestId;
+            Parameters = additionalData ?? new { };
         }
-
-        /// <summary>
-        /// ApiVersion
-        /// </summary>
-        public string ApiVersion { get; set; } = "1.0.0";
-
-        /// <summary>
-        /// Service to call
-        /// </summary>
-        public string Service { get; set; }
 
         /// <summary>
         /// Action to call
@@ -33,18 +24,13 @@
         public string Action { get; set; }
 
         /// <summary>
-        /// Manufacturer
+        /// Request ID
         /// </summary>
-        public string Manufacturer { get; set; } = "Elgato";
+        public int RequestId { get; set; }
 
         /// <summary>
-        /// Device
+        /// Additional parameters for service call
         /// </summary>
-        public string Device { get; set; } = "StreamDeck";
-
-        /// <summary>
-        /// Timestamp in ms since epoch
-        /// </summary>
-        public long Timestamp { get; set; }
+        public object Parameters { get; set; }
     }
 }
