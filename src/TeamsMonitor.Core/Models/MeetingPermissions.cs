@@ -55,5 +55,52 @@
         /// Allowed to pair
         /// </summary>
         public bool CanPair { get; set; }
+
+        /// <summary>
+        /// Equals
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        public override bool Equals(object? obj)
+        {
+            if (obj is MeetingPermissions other)
+            {
+                return CanToggleMute == other.CanToggleMute &&
+                       CanToggleVideo == other.CanToggleVideo &&
+                       CanToggleHand == other.CanToggleHand &&
+                       CanToggleBlur == other.CanToggleBlur &&
+                       CanLeave == other.CanLeave &&
+                       CanReact == other.CanReact &&
+                       CanToggleShareTray == other.CanToggleShareTray &&
+                       CanToggleChat == other.CanToggleChat &&
+                       CanStopSharing == other.CanStopSharing &&
+                       CanPair == other.CanPair;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// GetHashCode
+        /// </summary>
+        /// <returns></returns>
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int hash = 17;
+                hash = hash * 23 + CanToggleMute.GetHashCode();
+                hash = hash * 23 + CanToggleVideo.GetHashCode();
+                hash = hash * 23 + CanToggleHand.GetHashCode();
+                hash = hash * 23 + CanToggleBlur.GetHashCode();
+                hash = hash * 23 + CanLeave.GetHashCode();
+                hash = hash * 23 + CanReact.GetHashCode();
+                hash = hash * 23 + CanToggleShareTray.GetHashCode();
+                hash = hash * 23 + CanToggleChat.GetHashCode();
+                hash = hash * 23 + CanStopSharing.GetHashCode();
+                hash = hash * 23 + CanPair.GetHashCode();
+                return hash;
+            }
+        }
     }
 }

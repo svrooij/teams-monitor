@@ -15,6 +15,7 @@ namespace TeamsMonitor.Core
         public static readonly JsonSerializerOptions SerializerOptions = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
         private readonly TeamsSocketOptions options;
         private readonly ClientWebSocket webSocket;
+        private MeetingUpdate? lastUpdate;
         private int nextRequestId = 0;
         private bool shouldPair;
         private Task? backgroundTask;
@@ -192,11 +193,10 @@ namespace TeamsMonitor.Core
         /// Emit MeetingUpdate
         /// </summary>
         /// <param name="e">The data got from Teams</param>
-        protected virtual void OnUpdate(MeetingUpdate? e)
+        protected virtual void OnUpdate(MeetingUpdate e)
         {
-            if (Update != null && e is not null)
+            if (Update is not null)
                 Update(this, e);
-
 
         }
 
@@ -205,16 +205,16 @@ namespace TeamsMonitor.Core
         /// </summary>
         protected virtual void OnNewToken(string? e)
         {
-            if (NewToken != null && e is not null)
+            if (NewToken is not null && !string.IsNullOrWhiteSpace(e))
                 NewToken(this, e);
         }
 
         /// <summary>
         /// Emit ServiceResponse event
         /// </summary>
-        protected virtual void OnServiceResponse(ServiceResponse? e)
+        protected virtual void OnServiceResponse(ServiceResponse e)
         {
-            if (ServiceResponse != null && e is not null)
+            if (ServiceResponse is not null)
                 ServiceResponse(this, e);
         }
 
@@ -237,22 +237,25 @@ namespace TeamsMonitor.Core
                     var message = await JsonSerializer.DeserializeAsync<TeamsMessage>(ms, SerializerOptions, cancellationToken: cancellationToken);
                     if (message?.MeetingUpdate is not null)
                     {
-                        OnUpdate(message?.MeetingUpdate);
-                        if (message!.MeetingUpdate.MeetingPermissions?.CanPair is true && this.shouldPair)
+                        if (!message.MeetingUpdate.Equals(lastUpdate))
                         {
-                            await Task.Delay(1000, cancellationToken); // Wait a bit before pairing
-                            if (shouldPair)
+                            OnUpdate(message.MeetingUpdate);
+                            lastUpdate = message.MeetingUpdate;
+                            if (message.MeetingUpdate.MeetingPermissions?.CanPair is true && this.shouldPair)
                             {
-                                //await CallServiceAsync(options.AutoPairAction, cancellationToken);
-                                await SendReaction("like", cancellationToken);
+                                await Task.Delay(1000, cancellationToken); // Wait a bit before pairing
+                                if (shouldPair)
+                                {
+                                    //await CallServiceAsync(options.AutoPairAction, cancellationToken);
+                                    await SendReaction(this.options.AutoPairReaction, cancellationToken);
+                                }
                             }
-
                         }
                     }
 
                     if (message?.TokenRefresh is not null)
                     {
-                        OnNewToken(message?.TokenRefresh);
+                        OnNewToken(message.TokenRefresh);
                         shouldPair = false;
                     }
 
@@ -262,9 +265,15 @@ namespace TeamsMonitor.Core
                     }
 
                 }
+                await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Cancelled", CancellationToken.None);
             }
-            catch
+            catch (TaskCanceledException)
             {
+                // ignore, it's send by the user
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Error reading from socket {0}", e.Message);
             }
         }
     }

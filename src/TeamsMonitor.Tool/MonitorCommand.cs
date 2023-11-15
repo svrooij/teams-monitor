@@ -20,29 +20,32 @@ public sealed class MonitorCommand : RootCommand
             return !string.IsNullOrEmpty(webhook) && Uri.TryCreate(webhook, UriKind.Absolute, out var result) ? result : null;
         }, "Webhook URL to post the new status"));
         httpClient = new HttpClient();
-        Handler = CommandHandler.Create<InvocationContext, MonitorCommandOptions, CancellationToken>(Run);
+        Handler = CommandHandler.Create<InvocationContext, MonitorCommandOptions>(Run);
     }
 
-    private async Task Run(InvocationContext context, MonitorCommandOptions options, CancellationToken cancellationToken)
+    private async Task Run(InvocationContext context, MonitorCommandOptions options)
     {
         try
         {
             this._options = options;
             this._monitorOptions = await LoadOptionsFromPath(options.Storage);
 
-            Console.WriteLine("Connecting to Microsoft Teams");
+            var cancellationToken = context.GetCancellationToken();
+
+            Console.WriteLine("Connecting to Microsoft Teams        CTRL+C to exit");
 
             var socket = new TeamsSocket(new TeamsSocketOptions(_monitorOptions?.Token) { AutoPair = true });
             socket.Update += HandleUpdate;
             socket.NewToken += HandleNewToken;
             socket.ServiceResponse += HandleServiceResponse;
-            await socket.ConnectAsync(false, cancellationToken);
-            Console.WriteLine("Started listening...          CTRL+C to exit");
-            while (true)
-            {
-                Console.ReadLine();
-            }
+            await socket.ConnectAsync(true, cancellationToken);
+            Console.WriteLine("Closing application");
+            socket.Dispose();
 
+        }
+        catch (TaskCanceledException)
+        {
+            // ignore, it's send by the user
         }
         catch (Exception e)
         {
@@ -99,9 +102,9 @@ public sealed class MonitorCommand : RootCommand
         return Path.Combine(storagePath, "storage.json");
     }
 
-    private static async Task<TeamsMonitorOptions?> LoadOptionsFromPath(string path)
+    private static async Task<TeamsMonitorOptions?> LoadOptionsFromPath(string? path)
     {
-        if (File.Exists(path))
+        if (path is not null && File.Exists(path))
         {
             using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.Asynchronous);
             var options = await JsonSerializer.DeserializeAsync<TeamsMonitorOptions>(stream, TeamsSocket.SerializerOptions);
