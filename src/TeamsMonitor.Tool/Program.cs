@@ -27,7 +27,8 @@ const string header = @",---------.    .-''-.     ____    ,---.    ,---.   .-'''
 '--'      '--'    '-----'    '--'    '--' '---'     '---'      '-----'    ''-'   `'-'   
                                                                                         ";
 
-void WriteHeader() {
+void WriteHeader()
+{
     Console.WriteLine(header);
     Console.WriteLine();
     Console.WriteLine("Teams monitor v{0} by @svrooij", System.Reflection.Assembly.GetEntryAssembly()?.GetName()?.Version);

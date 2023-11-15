@@ -4,7 +4,7 @@
  [![Number of github stars][badge_stars]][link_source]
  [![Number of github issues][badge_issues]][link_issues]
  [![Source on github][badge_source]][link_source]
- 
+
  [![GitHub Sponsors][badge_sponsor]][link_sponsor]
  [![Check my blog][badge_blog]][link_blog]
 
@@ -13,10 +13,10 @@ A simple command line application that connects to the local Teams API and forwa
 Sending the status from your Teams client to any website is a matter of three steps:
 
 1. Install the tool `dotnet tool install --global SvRooij.TeamsMonitor`
-2. (optional) Set the Team token in environment `TEAMS_TOKEN`
-3. Run the tool `teams-monitor {teams-token-here} --webhook {url-here}`
+2. Run the tool `teams-monitor --webhook {url-here}`
+3. Join a test meeting to trigger the pairing process
 
-This app needs either `.NET6` or `.NET7` installed on your machine.
+This app needs either `.NET6` or `.NET7` or `.NET8` installed on your machine.
 
 ## Library available
 
@@ -36,23 +36,30 @@ If you run this tool with a webhook specified, the webhook will receive a HTTP P
 
 ```json
 {
+  "meetingUpdate": {
     "meetingState": {
-        "isMuted": false,
-        "isCameraOn": true,
-        "isHandRaised": false,
-        "isInMeeting": false,
-        "isRecordingOn": false,
-        "isBackgroundBlurred": false
+      "isMuted": false,
+      "isVideoOn": false,
+      "isHandRaised": false,
+      "isInMeeting": false,
+      "isRecordingOn": false,
+      "isBackgroundBlurred": false,
+      "isSharing": false,
+      "hasUnreadMessages": false
     },
     "meetingPermissions": {
-        "canToggleMute": false,
-        "canToggleVideo": true,
-        "canToggleHand": false,
-        "canToggleBlur": false,
-        "canToggleRecord": false,
-        "canLeave": false,
-        "canReact": false
+      "canToggleMute": false,
+      "canToggleVideo": false,
+      "canToggleHand": false,
+      "canToggleBlur": false,
+      "canLeave": false,
+      "canReact": false,
+      "canToggleShareTray": false,
+      "canToggleChat": false,
+      "canStopSharing": false,
+      "canPair": false
     }
+  }
 }
 ```
 
@@ -89,11 +96,10 @@ Press the **Add else** link and add a **Call Service** action that does the reve
 
 Copy the webhook url from the automation you just created and use that to start the Teams Monitor
 
-`teams-monitor {teams-api-token} --webhook {webhook-url}`
+`teams-monitor --webhook {webhook-url}`
 
-If you want to make it easier on yourself, you can also save both values in the environment settings
+If you want to make it easier on yourself, you can also save the webhook in the environment settings
 
-- `TEAMS_TOKEN` Teams token copied from the External api under privacy.
 - `TEAMS_WEBHOOK` Url copied from Home Assistant.
 
 ### Home assistant - Step 4
@@ -104,39 +110,142 @@ You now have a toggle helper that changes automatically when you're in a meeting
 
 ## Teams has a local api?
 
-Yes, it does! If you never heard of it, that might be right because it was released February 1st 2023. Once you [enable](https://support.microsoft.com/en-us/office/connect-third-party-devices-to-teams-aabca9f2-47bb-407f-9f9b-81a104a883d6) it, you get a local api token.
+Yes, it does! If you never heard of it, that might be right because it was released February 1st 2023. Once you [enable](https://support.microsoft.com/office/connect-third-party-devices-to-teams-aabca9f2-47bb-407f-9f9b-81a104a883d6?wt.mc_id=SEC-MVP-5004985) it, ~~you get a local api token.~~ Teams opens up a local websocket server that you can connect to using your client of choice.
 
-I'm not explaining what the api looks like, as [Martijn Smit](https://lostdomain.notion.site/Microsoft-Teams-WebSocket-API-5c042838bc3e4731bdfe679e864ab52a) already did that. For now you just need to know, if you enable the local api your Teams client will open a websocket server at localhost post `8124`.
+`ws://localhost:8124?token=61e9d3d4-dbd6-425d-b80f-8110f48f769c&protocol-version=2.0.0&manufacturer=YourManufacturer&device=YourDevice&app=YourApp&app-version=2.0.26`
 
-You can just use any client that supports websockets and connect to the following url.
-
-`ws://localhost:8124?token=API-TOKEN-FROM-PRIVACY&protocol-version=1.0.0&manufacturer=MuteDeck&device=MuteDeck&app=MuteDeck&app-version=1.4`
-
-If something changes to your meeting status (or any of the other values), you'll get a JSON encoded message on the open websocket connection that looks like:
+At first you have limited access, and once the user goes into a meeting you'll see a message like:
 
 ```json
 {
-    "apiVersion": "1.0.0",
-    "meetingUpdate": {
-        "meetingState": {
-            "isMuted": false,
-            "isCameraOn": true,
-            "isHandRaised": false,
-            "isInMeeting": false,
-            "isRecordingOn": false,
-            "isBackgroundBlurred": false
-        },
-        "meetingPermissions": {
-            "canToggleMute": false,
-            "canToggleVideo": true,
-            "canToggleHand": false,
-            "canToggleBlur": false,
-            "canToggleRecord": false,
-            "canLeave": false,
-            "canReact": false
-        }
+  "meetingUpdate": {
+    "meetingPermissions": {
+      "canToggleMute": true,
+      "canToggleVideo": true,
+      "canToggleHand": true,
+      "canToggleBlur": false,
+      "canLeave": true,
+      "canReact": true,
+      "canToggleShareTray": true,
+      "canToggleChat": true,
+      "canStopSharing": false,
+      "canPair": true
     }
+  }
 }
+```
+
+If `canPair` is `true`, it means the user is in a meeting and you can send any [available command](#commands-available) to trigger the pairing message in Teams and your app will get a new token for the next connection. If seeing if the user is an a meeting is enough for your use case, you can skip the pairing process and just use `canPair` as an indication whether the user is in a meeting.
+
+### Messages send by Teams
+
+Currently it seems there are several messages that you might receive:
+
+#### Meeting update
+
+After pairing, you will get messages like these:
+
+```json
+{
+  "meetingUpdate": {
+    "meetingState": {
+      "isMuted": false,
+      "isVideoOn": false,
+      "isHandRaised": false,
+      "isInMeeting": false,
+      "isRecordingOn": false,
+      "isBackgroundBlurred": false,
+      "isSharing": false,
+      "hasUnreadMessages": false
+    },
+    "meetingPermissions": {
+      "canToggleMute": false,
+      "canToggleVideo": false,
+      "canToggleHand": false,
+      "canToggleBlur": false,
+      "canLeave": false,
+      "canReact": false,
+      "canToggleShareTray": false,
+      "canToggleChat": false,
+      "canStopSharing": false,
+      "canPair": false
+    }
+  }
+}
+```
+
+#### Service response
+
+Pairing failed
+
+```json
+{"requestId":1,"response":"Pairing response resulted in no action"}
+```
+
+Your service request complete successfully
+
+```json
+{"requestId":2,"response":"Success"}
+```
+
+#### Token update
+
+```json
+{"tokenRefresh":"61e9d3d4-dbd6-425d-b80f-8110f48f769c"}
+```
+
+### Commands available
+
+You can send several commands to the websocket server, but they will only be accepted if you completed the pairing process.
+
+Each command has a `requestId` that you can use to match the response to the request. It seems to be an incrementing number, but I'm not sure if you can re-used them on the same connection.
+
+```json
+{ "action":"some-action","parameters":{},"requestId":1 }
+```
+
+#### Send a reaction
+
+You can send several reactions to teams. The once tested: `like`, `love`, `applause`, `wow`, `laugh`
+
+```json
+{
+  "action": "send-reaction",
+  "parameters": {
+    "type": "like"
+  },
+  "requestId": 1
+}
+```
+
+#### Toggle background blur
+
+```json
+{"action":"toggle-background-blur","parameters":{},"requestId":1}
+```
+
+#### Toggle Video
+  
+```json
+{"action":"toggle-video","parameters":{},"requestId":1}
+```
+
+#### Toggle Mute
+
+```json
+{"action":"toggle-mute","parameters":{},"requestId":1}
+```
+
+#### Toggle Hand
+
+```json
+{"action":"toggle-hand","parameters":{},"requestId":1}
+```
+
+#### Leave call
+
+```json
+{"action":"leave-call","parameters":{},"requestId":2}
 ```
 
 ## Socials

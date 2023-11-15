@@ -26,19 +26,34 @@
         public bool CanToggleBlur { get; set; }
 
         /// <summary>
-        /// Allowed to toggle recording
-        /// </summary>
-        public bool CanToggleRecord { get; set; }
-
-        /// <summary>
         /// Allowed to leave
         /// </summary>
-        /// <remarks> When would this not be allowed?</remarks>
+        /// <remarks>When would this not be allowed?</remarks>
         public bool CanLeave { get; set; }
 
         /// <summary>
         /// Allowed to react in current call
         /// </summary>
         public bool CanReact { get; set; }
+
+        /// <summary>
+        /// Allowed to toggle share tray
+        /// </summary>
+        public bool CanToggleShareTray { get; set; }
+
+        /// <summary>
+        /// Allowed to toggle chat
+        /// </summary>
+        public bool CanToggleChat { get; set; }
+
+        /// <summary>
+        /// Allowed to stop sharing
+        /// </summary>
+        public bool CanStopSharing { get; set; }
+
+        /// <summary>
+        /// Allowed to pair
+        /// </summary>
+        public bool CanPair { get; set; }
     }
 }

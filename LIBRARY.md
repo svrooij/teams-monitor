@@ -15,8 +15,11 @@ You can also control various settings using this library. Just explore all the m
 ## Sample code
 
 ```csharp
-using var socket = new TeamsSocket(new TeamsSocketOptions("{token-from-teams-client}"));
+using var socket = new TeamsSocket(new TeamsSocketOptions("{token-from-previous-paired-session}") { AutoPair = true });
 socket.Update += (object sender, MeetingUpdate update) => { ... }
+// Be sure to save the token and reuse it next time when connecting.
+socket.NewToken += (object sender, string token) => { ... }
+socket.ServiceResponse += (object sender, ServiceResponse response) => { ... }
 await socket.ConnectAsync(true, cancellationToken);
 ```
 
@@ -26,40 +29,13 @@ There also is an [application](https://github.com/svrooij/teams-monitor/blob/mai
 
 ## Teams has a local api?
 
-Yes, it does! If you never heard of it, that might be right because it was released February 1st 2023. Once you [enable](https://support.microsoft.com/en-us/office/connect-third-party-devices-to-teams-aabca9f2-47bb-407f-9f9b-81a104a883d6) it, you get a local api token.
+Yes, it does! If you never heard of it, that might be right because it was released February 1st 2023. Once you [enable](https://support.microsoft.com/office/connect-third-party-devices-to-teams-aabca9f2-47bb-407f-9f9b-81a104a883d6?wt.mc_id=SEC-MVP-5004985) it, Teams will open a websocket server on localhost.
 
-I'm not explaining what the api looks like, as [Martijn Smit](https://lostdomain.notion.site/Microsoft-Teams-WebSocket-API-5c042838bc3e4731bdfe679e864ab52a) already did that. For now you just need to know, if you enable the local api your Teams client will open a websocket server at localhost post `8124`.
+[Full api docs](https://github.com/svrooij/teams-monitor#teams-has-a-local-api)
 
 You can just use any client that supports websockets and connect to the following url.
 
-`ws://localhost:8124?token=API-TOKEN-FROM-PRIVACY&protocol-version=1.0.0&manufacturer=MuteDeck&device=MuteDeck&app=MuteDeck&app-version=1.4`
-
-If something changes to your meeting status (or any of the other values), you'll get a JSON encoded message on the open websocket connection that looks like:
-
-```json
-{
-    "apiVersion": "1.0.0",
-    "meetingUpdate": {
-        "meetingState": {
-            "isMuted": false,
-            "isCameraOn": true,
-            "isHandRaised": false,
-            "isInMeeting": false,
-            "isRecordingOn": false,
-            "isBackgroundBlurred": false
-        },
-        "meetingPermissions": {
-            "canToggleMute": false,
-            "canToggleVideo": true,
-            "canToggleHand": false,
-            "canToggleBlur": false,
-            "canToggleRecord": false,
-            "canLeave": false,
-            "canReact": false
-        }
-    }
-}
-```
+ws://localhost:8124?token=61e9d3d4-dbd6-425d-b80f-8110f48f769c&protocol-version=2.0.0&manufacturer=YourManufacturer&device=YourDevice&app=YourApp&app-version=2.0.26`
 
 ## Socials
 

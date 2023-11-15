@@ -11,9 +11,9 @@
         public bool IsMuted { get; set; }
 
         /// <summary>
-        /// Camera is on
+        /// Video is on
         /// </summary>
-        public bool IsCameraOn { get; set; }
+        public bool IsVideoOn { get; set; }
 
         /// <summary>
         /// Hand raised
@@ -34,5 +34,15 @@
         /// Background blur is on
         /// </summary>
         public bool IsBackgroundBlurred { get; set; }
+
+        /// <summary>
+        /// User is sharing content
+        /// </summary>
+        public bool IsSharing { get; set; }
+
+        /// <summary>
+        /// User has unread messages
+        /// </summary>
+        public bool HasUnreadMessages { get; set; }
     }
 }
