@@ -197,7 +197,7 @@ namespace TeamsMonitor.Core
             if (Update != null && e is not null)
                 Update(this, e);
 
-            
+
         }
 
         /// <summary>
@@ -235,27 +235,32 @@ namespace TeamsMonitor.Core
 
                     ms.Seek(0, SeekOrigin.Begin);
                     var message = await JsonSerializer.DeserializeAsync<TeamsMessage>(ms, SerializerOptions, cancellationToken: cancellationToken);
-                    if (message?.MeetingUpdate is not null) {
+                    if (message?.MeetingUpdate is not null)
+                    {
                         OnUpdate(message?.MeetingUpdate);
-                        if (message!.MeetingUpdate.MeetingPermissions?.CanPair is true && this.shouldPair) {
+                        if (message!.MeetingUpdate.MeetingPermissions?.CanPair is true && this.shouldPair)
+                        {
                             await Task.Delay(1000, cancellationToken); // Wait a bit before pairing
-                            if (shouldPair) {
+                            if (shouldPair)
+                            {
                                 //await CallServiceAsync(options.AutoPairAction, cancellationToken);
                                 await SendReaction("like", cancellationToken);
                             }
-                            
+
                         }
                     }
 
-                    if(message?.TokenRefresh is not null) {
+                    if (message?.TokenRefresh is not null)
+                    {
                         OnNewToken(message?.TokenRefresh);
                         shouldPair = false;
                     }
-                    
-                    if(message?.RequestId is not null && message?.Response is not null) {
+
+                    if (message?.RequestId is not null && message?.Response is not null)
+                    {
                         OnServiceResponse(new ServiceResponse { RequestId = message.RequestId.Value, Response = message.Response });
                     }
-                    
+
                 }
             }
             catch
