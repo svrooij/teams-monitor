@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Console;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.CommandLine.NamingConventionBinder;
@@ -9,6 +11,7 @@ using TeamsMonitor.Core.Models;
 public sealed class MonitorCommand : RootCommand
 {
     private readonly HttpClient httpClient;
+    private readonly ILoggerProvider loggerProvider;
     private MonitorCommandOptions? _options;
     private TeamsMonitorOptions? _monitorOptions;
     public MonitorCommand() : base("Monitor your Teams status")
@@ -21,6 +24,7 @@ public sealed class MonitorCommand : RootCommand
         }, "Webhook URL to post the new status"));
         httpClient = new HttpClient();
         Handler = CommandHandler.Create<InvocationContext, MonitorCommandOptions>(Run);
+        loggerProvider = new ConsoleLoggerProvider(new TeamsMonitor.Internal.OptionsMonitor<ConsoleLoggerOptions>(new ConsoleLoggerOptions()));
     }
 
     private async Task Run(InvocationContext context, MonitorCommandOptions options)
@@ -34,7 +38,7 @@ public sealed class MonitorCommand : RootCommand
 
             Console.WriteLine("Connecting to Microsoft Teams        CTRL+C to exit");
 
-            var socket = new TeamsSocket(new TeamsSocketOptions(_monitorOptions?.Token) { AutoPair = true });
+            var socket = new TeamsSocket(new TeamsSocketOptions(_monitorOptions?.Token) { AutoPair = true }, loggerProvider.CreateLogger(nameof(TeamsSocket)));
             socket.Update += HandleUpdate;
             socket.NewToken += HandleNewToken;
             socket.ServiceResponse += HandleServiceResponse;
@@ -56,12 +60,12 @@ public sealed class MonitorCommand : RootCommand
 
     private async void HandleUpdate(object? o, MeetingUpdate? update)
     {
-        Console.WriteLine("Update: {0}", JsonSerializer.Serialize(update, TeamsSocket.SerializerOptions));
+        //Console.WriteLine("Update: {0}", JsonSerializer.Serialize(update, TeamsSocket.SerializerOptions));
         try
         {
             if (_options?.Webhook != null)
             {
-                Console.WriteLine("--> Sending update to webhook");
+                //Console.WriteLine("--> Sending update to webhook");
                 await httpClient.PostAsync(_options.Webhook, new StringContent(JsonSerializer.Serialize(update, TeamsSocket.SerializerOptions), Encoding.UTF8, "application/json"));
             }
         }
