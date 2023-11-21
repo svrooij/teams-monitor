@@ -26,12 +26,12 @@ namespace TeamsMonitor.Core
         /// <summary>
         /// App name to send to Teams
         /// </summary>
-        public string App { get; set; } = " SvR.TeamsMonitor";
+        public string App { get; set; } = "SvR.TeamsMonitor";
 
         /// <summary>
         /// Device to send to Teams
         /// </summary>
-        public string Device { get; set; } = " SvR.TeamsMonitor";
+        public string Device { get; set; } = "SvR.TeamsMonitor";
 
         /// <summary>
         /// Manufacturer to send to Teams

@@ -1,4 +1,6 @@
-﻿using System.Net.WebSockets;
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
+using System.Net.WebSockets;
 using System.Text.Json;
 using TeamsMonitor.Core.Models;
 
@@ -13,6 +15,7 @@ namespace TeamsMonitor.Core
         /// JsonSerializerOptions used for communicating with Teams
         /// </summary>
         public static readonly JsonSerializerOptions SerializerOptions = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+        private readonly ILogger logger;
         private readonly TeamsSocketOptions options;
         private readonly ClientWebSocket webSocket;
         private MeetingUpdate? lastUpdate;
@@ -21,12 +24,23 @@ namespace TeamsMonitor.Core
         private Task? backgroundTask;
         private bool disposedValue;
 
+
+        /// <summary>
+        /// Create new TeamsSocket without logger
+        /// </summary>
+        /// <param name="options">Set options to connect to Teams</param>
+        /// <remarks>This constructor is only provided for backwards compatibility</remarks>
+        [Obsolete("Use the constructor with ILogger<TeamsSocket> instead")]
+        public TeamsSocket(TeamsSocketOptions options) : this(options, NullLogger<TeamsSocket>.Instance) { }
+
         /// <summary>
         /// Create new TeamsSocket
         /// </summary>
         /// <param name="options">Set options to connect to Teams</param>
-        public TeamsSocket(TeamsSocketOptions options)
+        /// <param name="logger">Optional logger</param>
+        public TeamsSocket(TeamsSocketOptions options, ILogger? logger)
         {
+            this.logger = logger ?? NullLogger<TeamsSocket>.Instance;
             this.options = options;
             this.shouldPair = options.AutoPair;
             webSocket = new ClientWebSocket();
@@ -65,6 +79,7 @@ namespace TeamsMonitor.Core
         {
             nextRequestId++;
             var message = new ServiceRequest(action, nextRequestId, parameters);
+            logger.LogDebug("Calling service {action} with request id {requestId}", action, nextRequestId);
             using var stream = new MemoryStream();
             await JsonSerializer.SerializeAsync(stream, message, SerializerOptions, cancellationToken);
             stream.Seek(0, SeekOrigin.Begin);
@@ -82,7 +97,11 @@ namespace TeamsMonitor.Core
         /// <param name="reaction">Any available reaction `like`, `love`, `applause`, `wow`, `laugh`</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns></returns>
-        public async Task<int> SendReaction(string reaction, CancellationToken cancellationToken) => await CallServiceAsync("send-reaction", cancellationToken, new { @Type = reaction });
+        public Task<int> SendReaction(string reaction, CancellationToken cancellationToken)
+        {
+            logger.LogDebug("Sending reaction {reaction}", reaction);
+            return CallServiceAsync("send-reaction", cancellationToken, new { @Type = reaction });
+        }
 
         /// <summary>
         /// Connect to Teams Client
@@ -92,6 +111,11 @@ namespace TeamsMonitor.Core
         /// <returns></returns>
         public async Task ConnectAsync(bool blocking, CancellationToken cancellationToken)
         {
+            if (webSocket.State == WebSocketState.Open)
+                return;
+
+            logger.LogInformation("Connecting to socket at {socketUri}", options.SocketUri);
+
             await webSocket.ConnectAsync(options.SocketUri, cancellationToken);
             if (blocking)
                 await ReadUntilCancelled(cancellationToken);
@@ -235,6 +259,7 @@ namespace TeamsMonitor.Core
 
                     ms.Seek(0, SeekOrigin.Begin);
                     var message = await JsonSerializer.DeserializeAsync<TeamsMessage>(ms, SerializerOptions, cancellationToken: cancellationToken);
+                    //logger.LogTrace("Received message @{message}", message);
                     if (message?.MeetingUpdate is not null)
                     {
                         if (!message.MeetingUpdate.Equals(lastUpdate))
@@ -246,6 +271,7 @@ namespace TeamsMonitor.Core
                                 await Task.Delay(1000, cancellationToken); // Wait a bit before pairing
                                 if (shouldPair)
                                 {
+                                    logger.LogInformation("Auto pairing");
                                     //await CallServiceAsync(options.AutoPairAction, cancellationToken);
                                     await SendReaction(this.options.AutoPairReaction, cancellationToken);
                                 }
@@ -255,12 +281,14 @@ namespace TeamsMonitor.Core
 
                     if (message?.TokenRefresh is not null)
                     {
+                        logger.LogInformation("New token received");
                         OnNewToken(message.TokenRefresh);
                         shouldPair = false;
                     }
 
                     if (message?.RequestId is not null && message?.Response is not null)
                     {
+                        logger.LogDebug("Received response for request id {requestId} {response} ", message.RequestId, message.Response);
                         OnServiceResponse(new ServiceResponse { RequestId = message.RequestId.Value, Response = message.Response });
                     }
 
@@ -273,7 +301,7 @@ namespace TeamsMonitor.Core
             }
             catch (Exception e)
             {
-                Console.WriteLine("Error reading from socket {0}", e.Message);
+                logger.LogError(e, "Error reading from socket");
             }
         }
     }

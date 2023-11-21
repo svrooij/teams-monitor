@@ -20,4 +20,7 @@
     <None Include="..\..\LIBRARY.md" Pack="true" PackagePath="\README.md" />
     <None Include="..\..\LICENSE.txt" Pack="true" PackagePath="\LICENSE.txt" />
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
+  </ItemGroup>
 </Project>
