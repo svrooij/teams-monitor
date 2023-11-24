@@ -18,7 +18,7 @@ namespace TeamsMonitor.Internal
 
         public T CurrentValue => options;
 
-        public T Get(string name) => options;
+        public T Get(string? name) => options;
 
         public IDisposable OnChange(Action<T, string> listener) => new NullDisposable();
 

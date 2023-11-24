@@ -13,7 +13,6 @@ public sealed class MonitorCommand : RootCommand
     private readonly HttpClient httpClient;
     private readonly ILoggerProvider loggerProvider;
     private MonitorCommandOptions? _options;
-    private TeamsMonitorOptions? _monitorOptions;
     public MonitorCommand() : base("Monitor your Teams status")
     {
         this.AddOption(new Option<string>("--storage", () => GetDefaultStorageLocation(), "Path to the storage file, default: %APPDATA%\\TeamsMonitor\\t.txt"));
@@ -93,9 +92,4 @@ class MonitorCommandOptions
 {
     public string? Storage { get; set; }
     public Uri? Webhook { get; set; }
-}
-
-public class TeamsMonitorOptions
-{
-    public string? Token { get; set; }
 }
