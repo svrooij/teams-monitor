@@ -15,6 +15,7 @@ jobs:
     env:
       BUILD_CONFIG: 'Release'
       SOLUTION: 'TeamsMonitor.sln'
+      PROJECT: 'src/TeamsMonitor.Tool/TeamsMonitor.csproj'
 
     runs-on: ubuntu-latest
 
@@ -29,7 +30,35 @@ jobs:
           8.x
 
     - name: Restore dependencies
-      run: dotnet restore $SOLUTION
+      run: |
+        dotnet restore $PROJECT
+
 
     - name: Build
-      run: dotnet build $SOLUTION --configuration $BUILD_CONFIG --no-restore
+      run: dotnet build $PROJECT --configuration $BUILD_CONFIG --no-restore
+
+  build-app:
+
+    env:
+      BUILD_CONFIG: 'Release'
+      PROJECT: 'src\TeamsMonitor.Tray\TeamsMonitor.Tray.csproj'
+
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: | 
+          6.x
+          7.x
+          8.x
+
+    - name: Restore dependencies
+      run: |
+        dotnet restore $PROJECT
+
+
+    - name: Build
+      run: dotnet build $PROJECT --configuration $BUILD_CONFIG --no-restore
