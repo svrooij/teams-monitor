@@ -41,7 +41,7 @@ jobs:
 
     env:
       BUILD_CONFIG: 'Release'
-      PROJECT: 'src\TeamsMonitor.Tray\TeamsMonitor.Tray.csproj'
+      PROJECT: '.\src\TeamsMonitor.Tray\TeamsMonitor.Tray.csproj'
 
     runs-on: windows-latest
 
@@ -61,4 +61,4 @@ jobs:
 
 
     - name: Build
-      run: dotnet build $PROJECT --configuration $BUILD_CONFIG --no-restore
+      run: dotnet build --configuration $BUILD_CONFIG --no-restore $PROJECT
