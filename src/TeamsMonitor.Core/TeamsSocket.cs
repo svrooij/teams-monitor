@@ -114,9 +114,16 @@ namespace TeamsMonitor.Core
             if (webSocket.State == WebSocketState.Open)
                 return;
 
-            logger.LogInformation("Connecting to socket at {socketUri}", options.SocketUri);
+            if (options.Token is null && options.SettingsLocation is not null)
+            {
+                await LoadTokenFromFile(cancellationToken);
+            }
 
-            await webSocket.ConnectAsync(options.SocketUri, cancellationToken);
+            var uri = options.SocketUri();
+
+            logger.LogInformation("Connecting to socket at {socketUri}", uri);
+
+            await webSocket.ConnectAsync(uri, cancellationToken);
             if (blocking)
                 await ReadUntilCancelled(cancellationToken);
             else
@@ -282,6 +289,9 @@ namespace TeamsMonitor.Core
                     if (message?.TokenRefresh is not null)
                     {
                         logger.LogInformation("New token received");
+
+                        options.Token = message.TokenRefresh;
+                        await SaveTokenToFile(cancellationToken);
                         OnNewToken(message.TokenRefresh);
                         shouldPair = false;
                     }
@@ -302,6 +312,57 @@ namespace TeamsMonitor.Core
             catch (Exception e)
             {
                 logger.LogError(e, "Error reading from socket");
+            }
+        }
+
+        private async Task LoadTokenFromFile(CancellationToken cancellationToken)
+        {
+            try
+            {
+                if (options.SettingsLocation is not null)
+                {
+                    var file = new FileInfo(options.SettingsLocation);
+                    if (file.Exists)
+                    {
+                        using var stream = file.OpenRead();
+                        var token = await JsonSerializer.DeserializeAsync<string>(stream, SerializerOptions, cancellationToken);
+                        if (!string.IsNullOrEmpty(token))
+                        {
+                            options.Token = token;
+                            logger.LogInformation("Loaded token from file");
+                        }
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e, "Error loading token from file");
+            }
+        }
+
+        private async Task SaveTokenToFile(CancellationToken cancellationToken)
+        {
+            try
+            {
+                if (options.SettingsLocation is not null)
+                {
+                    var file = new FileInfo(options.SettingsLocation);
+                    if (!file.Directory!.Exists)
+                    {
+                        file.Directory.Create();
+                    }
+                    if (file.Exists)
+                    {
+                        file.Delete();
+                    }
+                    using var stream = file.OpenWrite();
+                    await JsonSerializer.SerializeAsync(stream, options.Token, SerializerOptions, cancellationToken);
+                    logger.LogInformation("Saved token to file");
+                }
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e, "Error saving token to file");
             }
         }
     }

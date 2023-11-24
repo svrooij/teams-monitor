@@ -15,7 +15,7 @@ namespace TeamsMonitor.Core
         public TeamsSocketOptions(string? token = null)
         {
             //if (string.IsNullOrEmpty(token)) throw new ArgumentNullException(nameof(Token), "Token is required!");
-            Token = token ?? Guid.NewGuid().ToString();
+            Token = token;
         }
 
         /// <summary>
@@ -47,7 +47,7 @@ namespace TeamsMonitor.Core
         /// Teams API Token, Settings -> Privacy -> Manage API
         /// </summary>
         /// <seealso href="https://support.microsoft.com/en-us/office/connect-third-party-devices-to-teams-aabca9f2-47bb-407f-9f9b-81a104a883d6"/>
-        public string Token { get; set; }
+        public string? Token { get; set; }
 
         /// <summary>
         /// Automatically pair with Teams
@@ -63,6 +63,19 @@ namespace TeamsMonitor.Core
         public string AutoPairReaction { get; set; } = "like";
 
         // Thanks to wireshark on 127.0.0.1:8124
-        internal Uri SocketUri => new Uri($"ws://localhost:{Port}?token={Token}&protocol-version=2.0.0&manufacturer={Manufacturer}&device={Device}&app={App}&app-version={AppVersion}");
+        internal Uri SocketUri()
+        {
+            if (Token is null)
+            {
+                Token = Guid.NewGuid().ToString();
+            }
+            return new Uri($"ws://localhost:{Port}?token={Token}&protocol-version=2.0.0&manufacturer={Manufacturer}&device={Device}&app={App}&app-version={AppVersion}");
+
+        }
+
+        /// <summary>
+        /// Location of the settings file
+        /// </summary>
+        public string? SettingsLocation { get; set; }
     }
 }

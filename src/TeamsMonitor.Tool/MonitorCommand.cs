@@ -16,7 +16,7 @@ public sealed class MonitorCommand : RootCommand
     private TeamsMonitorOptions? _monitorOptions;
     public MonitorCommand() : base("Monitor your Teams status")
     {
-        this.AddOption(new Option<string>("--storage", () => GetDefaultStorageLocation(), "Path to the storage file, default: %APPDATA%\\TeamsMonitor\\storage.json"));
+        this.AddOption(new Option<string>("--storage", () => GetDefaultStorageLocation(), "Path to the storage file, default: %APPDATA%\\TeamsMonitor\\t.txt"));
         this.AddOption(new Option<Uri?>("--webhook", () =>
         {
             var webhook = Environment.GetEnvironmentVariable("TEAMS_WEBHOOK");
@@ -32,15 +32,12 @@ public sealed class MonitorCommand : RootCommand
         try
         {
             this._options = options;
-            this._monitorOptions = await LoadOptionsFromPath(options.Storage);
-
             var cancellationToken = context.GetCancellationToken();
 
             Console.WriteLine("Connecting to Microsoft Teams        CTRL+C to exit");
 
-            var socket = new TeamsSocket(new TeamsSocketOptions(_monitorOptions?.Token) { AutoPair = true }, loggerProvider.CreateLogger(nameof(TeamsSocket)));
+            var socket = new TeamsSocket(new TeamsSocketOptions() { AutoPair = true, SettingsLocation = _options.Storage }, loggerProvider.CreateLogger(nameof(TeamsSocket)));
             socket.Update += HandleUpdate;
-            socket.NewToken += HandleNewToken;
             socket.ServiceResponse += HandleServiceResponse;
             await socket.ConnectAsync(true, cancellationToken);
             Console.WriteLine("Closing application");
@@ -60,12 +57,10 @@ public sealed class MonitorCommand : RootCommand
 
     private async void HandleUpdate(object? o, MeetingUpdate? update)
     {
-        //Console.WriteLine("Update: {0}", JsonSerializer.Serialize(update, TeamsSocket.SerializerOptions));
         try
         {
             if (_options?.Webhook != null)
             {
-                //Console.WriteLine("--> Sending update to webhook");
                 await httpClient.PostAsync(_options.Webhook, new StringContent(JsonSerializer.Serialize(update, TeamsSocket.SerializerOptions), Encoding.UTF8, "application/json"));
             }
         }
@@ -75,20 +70,6 @@ public sealed class MonitorCommand : RootCommand
         }
     }
 
-    private async void HandleNewToken(object? o, string token)
-    {
-        Console.WriteLine("New token: {0}", token);
-        if (_monitorOptions != null)
-        {
-            _monitorOptions.Token = token;
-
-        }
-        else
-        {
-            _monitorOptions = new TeamsMonitorOptions { Token = token };
-        }
-        await SaveOptionsToPath(_options!.Storage!, _monitorOptions);
-    }
 
     private void HandleServiceResponse(object? o, ServiceResponse response)
     {
@@ -103,29 +84,9 @@ public sealed class MonitorCommand : RootCommand
         {
             Directory.CreateDirectory(storagePath);
         }
-        return Path.Combine(storagePath, "storage.json");
+        return Path.Combine(storagePath, "t.txt");
     }
 
-    private static async Task<TeamsMonitorOptions?> LoadOptionsFromPath(string? path)
-    {
-        if (path is not null && File.Exists(path))
-        {
-            using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.Asynchronous);
-            var options = await JsonSerializer.DeserializeAsync<TeamsMonitorOptions>(stream, TeamsSocket.SerializerOptions);
-            if (!string.IsNullOrEmpty(options?.Token))
-            {
-                return options;
-            }
-
-        }
-        return null;
-    }
-
-    private static async Task SaveOptionsToPath(string path, TeamsMonitorOptions options)
-    {
-        using var stream = new FileStream(path, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None, 4096, FileOptions.Asynchronous);
-        await JsonSerializer.SerializeAsync(stream, options, TeamsSocket.SerializerOptions);
-    }
 }
 
 class MonitorCommandOptions
