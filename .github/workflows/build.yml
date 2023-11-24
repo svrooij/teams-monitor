@@ -11,7 +11,7 @@ on:
     
 jobs:
   build:
-
+    name: Build TeamsMonitor.Tool
     env:
       BUILD_CONFIG: 'Release'
       SOLUTION: 'TeamsMonitor.sln'
@@ -38,7 +38,7 @@ jobs:
       run: dotnet build $PROJECT --configuration $BUILD_CONFIG --no-restore
 
   build-app:
-
+    name: Build TeamsMonitor.Tray
     env:
       BUILD_CONFIG: 'Release'
       PROJECT: '.\src\TeamsMonitor.Tray\TeamsMonitor.Tray.csproj'
@@ -61,4 +61,4 @@ jobs:
 
 
     - name: Build
-      run: dotnet build --configuration $BUILD_CONFIG --no-restore $PROJECT
+      run: dotnet build --configuration "Release" --no-restore $PROJECT
