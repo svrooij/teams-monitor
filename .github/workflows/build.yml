@@ -65,9 +65,9 @@ jobs:
     
     - name: Restore installer project
       run: |
-        msbuild TeamsMonitor.sln /p:Configuration=Release /t:Restore /p:RuntimeIdentifier=win-x64
+        msbuild TeamsMonitor.sln /p:Configuration=Release /t:Restore
     
     - name: Package app
       run: |
-        msbuild .\src\TeamsMonitor.Tray.Installer\TeamsMonitor.Tray.Installer.wapproj /p:Configuration=Release /t:Build /p:RuntimeIdentifier=win-x64
+        msbuild .\src\TeamsMonitor.Tray.Installer\TeamsMonitor.Tray.Installer.wapproj /p:Configuration=Release /t:Build
 
