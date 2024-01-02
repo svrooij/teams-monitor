@@ -55,10 +55,22 @@ jobs:
           7.x
           8.x
 
+    - uses: microsoft/setup-msbuild@v1.3.1
+      with:
+        vs-version: '17.8.3'
+
     - name: Restore dependencies
       run: |
         dotnet restore .\src\TeamsMonitor.Tray\TeamsMonitor.Tray.csproj
 
-
     - name: Build
       run: dotnet build -c Release .\src\TeamsMonitor.Tray\TeamsMonitor.Tray.csproj
+    
+    - name: Restore installer project
+      run: |
+        dotnet restore .\src\TeamsMonitor.Tray.Installer\TeamsMonitor.Tray.Installer.wapproj
+    
+    - name: Package app
+      run: |
+        dotnet build -c Release .\src\TeamsMonitor.Tray.Installer\TeamsMonitor.Tray.Installer.wapproj
+
