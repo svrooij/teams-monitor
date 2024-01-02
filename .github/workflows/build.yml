@@ -39,9 +39,6 @@ jobs:
 
   build-app:
     name: Build TeamsMonitor.Tray
-    env:
-      BUILD_CONFIG: 'Release'
-      PROJECT: '.\src\TeamsMonitor.Tray\TeamsMonitor.Tray.csproj'
 
     runs-on: windows-latest
 
@@ -68,9 +65,9 @@ jobs:
     
     - name: Restore installer project
       run: |
-        dotnet restore .\src\TeamsMonitor.Tray.Installer\TeamsMonitor.Tray.Installer.wapproj
+        msbuild TeamsMonitor.sln /p:Configuration=Release /t:Restore /p:RuntimeIdentifier=win-x64
     
     - name: Package app
       run: |
-        dotnet build -c Release .\src\TeamsMonitor.Tray.Installer\TeamsMonitor.Tray.Installer.wapproj
+        msbuild .\src\TeamsMonitor.Tray.Installer\TeamsMonitor.Tray.Installer.wapproj /p:Configuration=Release /t:Build /p:RuntimeIdentifier=win-x64
 
