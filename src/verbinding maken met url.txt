@@ -1,0 +1,36 @@
+verbinding maken met url:
+GET /?token=2caae0c4-d30b-4ac4-a279-b678cab1ef46&protocol-version=2.0.0&manufacturer=Elgato&device=Stream%20Deck&app=Stream%20Deck&app-version=2.0.26 HTTP/1.1\r\n
+host: 127.0.0.1:8124
+
+switching protocol
+
+meetingUpdate, niet in meeting alles false
+{"meetingUpdate":{"meetingPermissions":{"canToggleMute":false,"canToggleVideo":false,"canToggleHand":false,"canToggleBlur":false,"canLeave":false,"canReact":false,"canToggleShareTray":false,"canToggleChat":false,"canStopSharing":false,"canPair":false}}}
+
+meetingUpdate, in meeting, canPair naar true
+{"meetingUpdate":{"meetingPermissions":{"canToggleMute":true,"canToggleVideo":true,"canToggleHand":true,"canToggleBlur":false,"canLeave":true,"canReact":true,"canToggleShareTray":true,"canToggleChat":true,"canStopSharing":false,"canPair":false}}}
+...
+{"meetingUpdate":{"meetingPermissions":{"canToggleMute":true,"canToggleVideo":true,"canToggleHand":true,"canToggleBlur":false,"canLeave":true,"canReact":true,"canToggleShareTray":true,"canToggleChat":true,"canStopSharing":false,"canPair":true}}}
+
+
+client -> teams, send action (niks doen)
+{"action":"toggle-hand","parameters":{},"requestId":1}
+
+teams -> client
+{"requestId":1,"response":"Pairing response resulted in no action"}
+
+client -> teams send action (op allow klikken)
+{"action":"toggle-hand","parameters":{},"requestId":2}
+
+teams -> client
+{"tokenRefresh":"f82778e5-f00f-4f4d-9aa7-dc820ebe9b3b"}
+
+teams -> client
+{"requestId":2,"response":"Success"}
+
+Volgende keer wordt verbonden met het laatst ontvangen token!
+En daarna wordt het volgende bericht door teams verstuurd.
+
+{"meetingUpdate":{"meetingState":{"isMuted":false,"isVideoOn":false,"isHandRaised":false,"isInMeeting":false,"isRecordingOn":false,"isBackgroundBlurred":false,"isSharing":false,"hasUnreadMessages":false},"meetingPermissions":{"canToggleMute":false,"canToggleVideo":false,"canToggleHand":false,"canToggleBlur":false,"canLeave":false,"canReact":false,"canToggleShareTray":false,"canToggleChat":false,"canStopSharing":false,"canPair":false}}}
+
+{"meetingUpdate":{"meetingState":{"isMuted":false,"isVideoOn":false,"isHandRaised":false,"isInMeeting":true,"isRecordingOn":false,"isBackgroundBlurred":false,"isSharing":false,"hasUnreadMessages":false},"meetingPermissions":{"canToggleMute":true,"canToggleVideo":true,"canToggleHand":true,"canToggleBlur":false,"canLeave":true,"canReact":true,"canToggleShareTray":true,"canToggleChat":true,"canStopSharing":false,"canPair":false}}}

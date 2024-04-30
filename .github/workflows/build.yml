@@ -59,6 +59,5 @@ jobs:
       run: |
         dotnet restore .\src\TeamsMonitor.Tray\TeamsMonitor.Tray.csproj
 
-
-    - name: Build
+    - name: Build app
       run: dotnet build -c Release .\src\TeamsMonitor.Tray\TeamsMonitor.Tray.csproj
