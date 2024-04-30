@@ -16,7 +16,7 @@ Sending the status from your Teams client to any website is a matter of three st
 2. Run the tool `teams-monitor --webhook {url-here}`
 3. Join a test meeting to trigger the pairing process
 
-This app needs either `.NET6` or `.NET7` or `.NET8` installed on your machine.
+This app needs either `.NET6` or `.NET8` installed on your machine.
 
 ## Library available
 
