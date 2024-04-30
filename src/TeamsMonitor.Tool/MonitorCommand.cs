@@ -1,6 +1,7 @@
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.CommandLine.NamingConventionBinder;
+using System.Net;
 using System.Text;
 using System.Text.Json;
 using TeamsMonitor.Core;
@@ -8,7 +9,7 @@ using TeamsMonitor.Core.Models;
 
 public sealed class MonitorCommand : RootCommand
 {
-    private readonly HttpClient httpClient;
+    private HttpClient? httpClient;
     private MonitorCommandOptions? _options;
     private TeamsMonitorOptions? _monitorOptions;
     public MonitorCommand() : base("Monitor your Teams status")
@@ -19,6 +20,11 @@ public sealed class MonitorCommand : RootCommand
             var webhook = Environment.GetEnvironmentVariable("TEAMS_WEBHOOK");
             return !string.IsNullOrEmpty(webhook) && Uri.TryCreate(webhook, UriKind.Absolute, out var result) ? result : null;
         }, "Webhook URL to post the new status"));
+        this.AddOption(new Option<string?>("--proxy-url", "Proxy URL to use for the connection"));
+        this.AddOption(new Option<string?>("--proxy-username", "Proxy username"));
+        this.AddOption(new Option<string?>("--proxy-password", "Proxy password"));
+
+        
         httpClient = new HttpClient();
         Handler = CommandHandler.Create<InvocationContext, MonitorCommandOptions>(Run);
     }
@@ -28,6 +34,19 @@ public sealed class MonitorCommand : RootCommand
         try
         {
             this._options = options;
+
+            if (!string.IsNullOrEmpty(options.ProxyUrl))
+            {
+                var proxy = new WebProxy(options.ProxyUrl);
+                if (!string.IsNullOrEmpty(options.ProxyUsername))
+                {
+                    proxy.Credentials = new NetworkCredential(options.ProxyUsername, options.ProxyPassword);
+                }
+                httpClient = new HttpClient(new HttpClientHandler { Proxy = proxy });
+            } else {
+                httpClient = new HttpClient();
+            }
+
             this._monitorOptions = await LoadOptionsFromPath(options.Storage);
 
             var cancellationToken = context.GetCancellationToken();
@@ -62,7 +81,7 @@ public sealed class MonitorCommand : RootCommand
             if (_options?.Webhook != null)
             {
                 Console.WriteLine("--> Sending update to webhook");
-                await httpClient.PostAsync(_options.Webhook, new StringContent(JsonSerializer.Serialize(update, TeamsSocket.SerializerOptions), Encoding.UTF8, "application/json"));
+                await httpClient!.PostAsync(_options.Webhook, new StringContent(JsonSerializer.Serialize(update, TeamsSocket.SerializerOptions), Encoding.UTF8, "application/json"));
             }
         }
         catch (Exception e)
@@ -128,6 +147,9 @@ class MonitorCommandOptions
 {
     public string? Storage { get; set; }
     public Uri? Webhook { get; set; }
+    public string? ProxyUrl { get; set; }
+    public string? ProxyUsername { get; set; }
+    public string? ProxyPassword { get; set; }
 }
 
 public class TeamsMonitorOptions
