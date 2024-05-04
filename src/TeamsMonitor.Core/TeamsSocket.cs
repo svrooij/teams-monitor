@@ -173,6 +173,13 @@ namespace TeamsMonitor.Core
         public Task<int> ToggleVideoAsync(CancellationToken cancellationToken) => CallServiceAsync("toggle-video", cancellationToken);
 
         /// <summary>
+        /// Toggle the Chat UI
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public Task<int> ToggleChatAsync(CancellationToken cancellationToken) => CallServiceAsync("toggle-ui", cancellationToken, new { @Type = "chat" });
+
+        /// <summary>
         /// 
         /// </summary>
         /// <param name="disposing"></param>
